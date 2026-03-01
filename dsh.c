@@ -74,7 +74,9 @@ int main()
     if (pid == 0) {
       execvp(args[0], args);
         if (errno == ENOENT)
-          fprintf(stderr, "%s: command not found\n", args[0]);
+          fprintf(stderr,
+                  "%s: command not found\n",
+                  args[0]);
         else
           perror("exec");
         
