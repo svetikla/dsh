@@ -7,17 +7,50 @@
 
 void print_prompt(void)
 {
-    char cwd[1024];
+  char cwd[1024];
 
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-      char *base = strrchr(cwd, '/');
-      if (base && *(base + 1) != '\0')
-        printf("%s > ", base + 1);
-    } else {
-      printf("/ > ");
-    }
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    printf("/ > ");
+  }
+
+  char *last = strrchr(cwd, '/');
+
+  if (last == NULL)
+    printf("%s > ", cwd);
+  else if (*(last + 1) != '\0')
+    printf("%s > ", last + 1);
+  else
+    printf("/ > ");
 }
 
+int run_command(char **args)
+{
+  pid_t pid = fork();
+  int status;
+
+  if (pid < 0) {
+    perror("fork");
+    return 1;
+  }
+
+  if (pid == 0) { 
+    execvp(args[0], args); 
+    if (errno == ENOENT) 
+      fprintf(stderr, "%s: command not found\n", args[0]); 
+    else
+      perror("exec");
+
+    exit(1); 
+  } 
+
+  wait(&status);
+
+  if (WIFEXITED(status))
+    return WEXITSTATUS(status);
+
+  return 1;
+}
+  
 int main()
 {
   while (1)
@@ -56,10 +89,11 @@ int main()
     }
 
     if (strcmp(args[0], "cd") == 0) {
-      if (args[1] == NULL)
-        chdir(getenv("HOME"));
-      else
-        chdir(args[1]);
+      char *dir = args[1];
+      if (dir == NULL)
+        dir = getenv("HOME");
+      if (chdir(dir) != 0)
+        perror("cd");
 
       free(buffer);
       continue;
@@ -69,22 +103,32 @@ int main()
       free(buffer);
       break;
     }
-
-    pid_t pid = fork();
-    if (pid == 0) {
-      execvp(args[0], args);
-        if (errno == ENOENT)
-          fprintf(stderr,
-              "%s: command not found\n",
-              args[0]);
-        else
-          perror("exec");
-        
-        exit(1);
+    
+    int and_pos = -1;
+    for (int j = 0; j < i; j++) {
+      if (strcmp(args[j], "&&") == 0) {
+        and_pos = j;
+        break;
       }
-    else {
-      wait(NULL);
+    } 
+
+    if (and_pos != -1) {
+
+      args[and_pos] = NULL;
+
+      char **cmd1 = args;
+      char **cmd2 = &args[and_pos + 1];
+
+      int status = run_command(cmd1);
+
+      if (status == 0)
+        run_command(cmd2);
+
+      free(buffer);
+      continue;
     }
+
+    run_command(args);
 
     free(buffer);
   }
