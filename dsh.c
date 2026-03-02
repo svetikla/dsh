@@ -11,6 +11,7 @@ void print_prompt(void)
 
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
     printf("/ > ");
+    return;
   }
 
   char *last = strrchr(cwd, '/');
