@@ -5,7 +5,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-void print_prompt(void)
+void
+prompt(void)
 {
   char cwd[1024];
 
@@ -24,7 +25,8 @@ void print_prompt(void)
     printf("/ > ");
 }
 
-int run_command(char **args)
+int
+run(char **args)
 {
   pid_t pid = fork();
   int status;
@@ -52,14 +54,15 @@ int run_command(char **args)
   return 1;
 }
   
-int main()
+int
+main()
 {
   while (1)
   {
     char *buffer = NULL;
     size_t size = 0;
 
-    print_prompt();
+    prompt();
 
     ssize_t char_read = getline(&buffer, &size, stdin);
 
@@ -120,16 +123,16 @@ int main()
       char **cmd1 = args;
       char **cmd2 = &args[and_pos + 1];
 
-      int status = run_command(cmd1);
+      int status = run(cmd1);
 
       if (status == 0)
-        run_command(cmd2);
+        run(cmd2);
 
       free(buffer);
       continue;
     }
 
-    run_command(args);
+    run(args);
 
     free(buffer);
   }
