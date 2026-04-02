@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 
 void
 prompt(void)
@@ -11,7 +13,7 @@ prompt(void)
   char cwd[1024];
 
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
-    printf("/ > ");
+    puts("/ > ");
     return;
   }
 
@@ -22,14 +24,14 @@ prompt(void)
   else if (*(last + 1) != '\0')
     printf("%s > ", last + 1);
   else
-    printf("/ > ");
+    puts("/ > ");
 }
 
 int
-run(char **args)
+spawn(char **args)
 {
-  pid_t pid = fork();
   int status;
+  pid_t pid = fork();
 
   if (pid < 0) {
     perror("fork");
@@ -57,29 +59,31 @@ run(char **args)
 int
 main()
 {
-  while (1)
+  for (;;)
   {
-    char *buffer = NULL;
-    size_t size = 0;
-
-    prompt();
-
-    ssize_t char_read = getline(&buffer, &size, stdin);
-
-    if (char_read == -1) {
+    char *input = readline("dsh > ");
+    
+    if (!input) {
       printf("\n");
-      free(buffer);
       break;
     }
 
-    if (char_read > 0 && buffer[char_read - 1] == '\n')
-      buffer[char_read - 1] = '\0';
+    if (*input) {
+      add_history(input);
+    }
+
+    if (*input == '\0') {
+      free(input);
+      continue;
+    }
+
+    add_history(input);
 
     char *args[100];
-
     int i = 0;
 
-    char *token = strtok(buffer, " ");
+    char *token = strtok(input, " ");
+
     while (token != NULL && i < 99) {
       args[i++] = token;
       token = strtok(NULL, " ");
@@ -88,52 +92,43 @@ main()
     args[i] = NULL;
 
     if (i == 0) {
-      free(buffer);
-      continue;
-    }
-
-    if (strcmp(args[0], "cd") == 0) {
-      char *dir = args[1];
-      if (dir == NULL)
-        dir = getenv("HOME");
-      if (chdir(dir) != 0)
-        perror("cd");
-
-      free(buffer);
+      free(input);
       continue;
     }
 
     if (strcmp(args[0], "exit") == 0) {
-      free(buffer);
+      free(input);
       break;
     }
-    
+
+    if (strcmp(args[0], "cd") == 0) {
+      char *dir = args[1] ? args[1] : getenv("HOME");
+      if (chdir(dir) != 0)
+        perror("cd");
+      free(input);
+      continue;
+    }
+
     int and_pos = -1;
+
     for (int j = 0; j < i; j++) {
       if (strcmp(args[j], "&&") == 0) {
         and_pos = j;
         break;
       }
-    } 
-
-    if (and_pos != -1) {
-
-      args[and_pos] = NULL;
-
-      char **cmd1 = args;
-      char **cmd2 = &args[and_pos + 1];
-
-      int status = run(cmd1);
-
-      if (status == 0)
-        run(cmd2);
-
-      free(buffer);
-      continue;
     }
 
-    run(args);
+    if (and_pos != -1) {
+      args[and_pos] = NULL;
+      if (spawn(args) == 0) {
+        spawn(&args[and_pos + 1]);
+      }
+    } else {
+      spawn(args);
+    }
 
-    free(buffer);
+    free(input);
   }
+
+  return 0;
 }
