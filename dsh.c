@@ -7,24 +7,24 @@
 #include <readline/history.h>
 #include <readline/readline.h>
 
-void
-prompt(void)
+char
+*prompt(void)
 {
   char cwd[1024];
+  static char pbuf[1024];
+  char *dir = strrchr(cwd, '/');
 
-  if (getcwd(cwd, sizeof(cwd)) == NULL) {
-    puts("/ > ");
-    return;
-  }
+  if (getcwd(cwd, sizeof(cwd)) == NULL)
+    return("/ > ");
 
-  char *last = strrchr(cwd, '/');
+  if (dir == NULL || strcmp(cwd, "/") == 0)
+    dir = cwd;
+  else 
+    dir ++;
 
-  if (last == NULL)
-    printf("%s > ", cwd);
-  else if (*(last + 1) != '\0')
-    printf("%s > ", last + 1);
-  else
-    puts("/ > ");
+  snprintf(pbuf, sizeof(pbuf), "%s > ", dir);
+
+  return pbuf;
 }
 
 int
@@ -61,7 +61,7 @@ main()
 {
   for (;;)
   {
-    char *input = readline("dsh > ");
+    char *input = readline(prompt());
     
     if (!input) {
       printf("\n");
