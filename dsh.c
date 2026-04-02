@@ -11,19 +11,19 @@ char
 *prompt(void)
 {
   char cwd[1024];
-  static char pbuf[1024];
-  char *dir = strrchr(cwd, '/');
+  static char pbuf[1100];
 
   if (getcwd(cwd, sizeof(cwd)) == NULL)
     return("/ > ");
 
+  char *dir = strrchr(cwd, '/');
+
   if (dir == NULL || strcmp(cwd, "/") == 0)
     dir = cwd;
   else 
-    dir ++;
+    dir++;
 
   snprintf(pbuf, sizeof(pbuf), "%s > ", dir);
-
   return pbuf;
 }
 
