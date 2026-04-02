@@ -77,8 +77,6 @@ main()
       continue;
     }
 
-    add_history(input);
-
     char *args[100];
     int i = 0;
 
