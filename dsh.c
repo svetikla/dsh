@@ -38,7 +38,7 @@ spawn(char **args)
     return 1;
   }
 
-  if (pid == 0) { 
+  if (!pid) { 
     execvp(args[0], args); 
     if (errno == ENOENT) 
       fprintf(stderr, "%s: command not found\n", args[0]); 
@@ -68,9 +68,8 @@ main()
       break;
     }
 
-    if (*input) {
+    if (*input)
       add_history(input);
-    }
 
     if (*input == '\0') {
       free(input);
@@ -89,41 +88,47 @@ main()
 
     args[i] = NULL;
 
-    if (i == 0) {
+    if (!i) {
       free(input);
       continue;
     }
 
-    if (strcmp(args[0], "exit") == 0) {
+    if (!strcmp(args[0], "exit")) {
       free(input);
       break;
     }
 
-    if (strcmp(args[0], "cd") == 0) {
-      char *dir = args[1] ? args[1] : getenv("HOME");
-      if (chdir(dir) != 0)
+    if (!strcmp(args[0], "cd")) {
+      char *p = args[1] ? args[1] : getenv("HOME");
+
+      if (chdir(p) != 0)
         perror("cd");
       free(input);
       continue;
     }
 
-    int and_pos = -1;
+    char **ap;
+	  int  r;
 
-    for (int j = 0; j < i; j++) {
-      if (strcmp(args[j], "&&") == 0) {
-        and_pos = j;
-        break;
-      }
-    }
+	  ap = args;
 
-    if (and_pos != -1) {
-      args[and_pos] = NULL;
-      if (spawn(args) == 0) {
-        spawn(&args[and_pos + 1]);
-      }
-    } else {
-      spawn(args);
-    }
+	  while (ap && *ap) {
+		  int i;
+		  char **next = NULL;
+
+		  for (i = 0; ap[i]; i++) {
+			  if (strcmp(ap[i], "&&") == 0) {
+				  ap[i] = NULL;
+				  next = &ap[i + 1];
+				  break;
+			  }
+		  }
+
+		  if ((r = spawn(ap)) != 0)
+			  break;
+
+		  ap = next;
+	  }
 
     free(input);
   }
