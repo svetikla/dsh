@@ -1,4 +1,1 @@
-simple (stupid) shell in c.
-
-it does not support pipes or redirections,
-        and i don't plan to add them
+simple (stupid, not usable) shell in c.
