@@ -1,1 +1,5 @@
 simple (stupid, not usable) shell in c.
+
+build:
+  (linux)   -  cc dsh.c -o dsh -lreadline
+  (freebsd) -  cc dsh.c -o dsh -I/usr/local/include -L/usr/local/lib -lreadline

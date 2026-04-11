@@ -117,10 +117,10 @@ main()
 		  char **next = NULL;
 
 		  for (i = 0; ap[i]; i++) {
-			  if (strcmp(ap[i], "&&") == 0) {
-				  ap[i] = NULL;
-				  next = &ap[i + 1];
-				  break;
+        if (strcmp(ap[i], "&&") == 0) {
+          ap[i] = NULL;
+          next = &ap[i + 1];
+          break;
 			  }
 		  }
 
