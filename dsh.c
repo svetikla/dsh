@@ -112,23 +112,22 @@ main()
 
 	  ap = args;
 
-	  while (ap && *ap) {
-		  int i;
-		  char **next = NULL;
-
-		  for (i = 0; ap[i]; i++) {
+    while (ap && *ap) {
+      int i;
+      char **next = NULL;
+      for (i = 0; ap[i]; i++) {
         if (strcmp(ap[i], "&&") == 0) {
           ap[i] = NULL;
           next = &ap[i + 1];
           break;
-			  }
-		  }
+        }
+      }
 
-		  if ((r = spawn(ap)) != 0)
-			  break;
+      if ((r = spawn(ap)) != 0)
+        break;
 
-		  ap = next;
-	  }
+   ap = next;
+   }
 
     free(input);
   }
