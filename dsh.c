@@ -18,13 +18,13 @@ char
 
   char *dir = strrchr(cwd, '/');
 
-  if (dir == NULL || strcmp(cwd, "/") == 0)
+  if (dir == NULL || strcmp(cwd, "/") == 0) {
     dir = cwd;
-  else 
+  } else {
     dir++;
-
+  }
   snprintf(pbuf, sizeof(pbuf), "%s > ", dir);
-  return pbuf;
+  return (pbuf);
 }
 
 int
@@ -35,25 +35,26 @@ spawn(char **args)
 
   if (pid < 0) {
     perror("fork");
-    return 1;
+    return (1);
   }
 
   if (!pid) { 
     execvp(args[0], args); 
-    if (errno == ENOENT) 
+    if (errno == ENOENT) {
       fprintf(stderr, "%s: command not found\n", args[0]); 
-    else
+    } else {
       perror("exec");
+    }
 
     exit(1); 
   } 
 
   wait(&status);
 
-  if (WIFEXITED(status))
+  if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
-
-  return 1;
+  }
+  return (1);
 }
   
 int
@@ -68,8 +69,9 @@ main()
       break;
     }
 
-    if (*input)
+    if (*input) {
       add_history(input);
+    }
 
     if (*input == '\0') {
       free(input);
@@ -115,6 +117,7 @@ main()
     while (ap && *ap) {
       int i;
       char **next = NULL;
+
       for (i = 0; ap[i]; i++) {
         if (strcmp(ap[i], "&&") == 0) {
           ap[i] = NULL;
@@ -126,11 +129,11 @@ main()
       if ((r = spawn(ap)) != 0)
         break;
 
-   ap = next;
-   }
+      ap = next;
+    }
 
     free(input);
   }
 
-  return 0;
+  return (0);
 }
